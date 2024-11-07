@@ -30,7 +30,7 @@ public class SignUpServlet extends HttpServlet {
 
             int rowsAffected = stmt.executeUpdate();
             if (rowsAffected > 0) {
-                response.sendRedirect("jsp/signup.jsp?message=success");
+                response.sendRedirect("jsp/login.jsp?message=success");
             } else {
                 response.sendRedirect("jsp/signup.jsp?message=error");
             }
