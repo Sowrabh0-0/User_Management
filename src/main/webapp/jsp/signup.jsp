@@ -8,7 +8,7 @@
     <script src="../js/script.js"></script>
 </head>
 <body>
-    <!-- Include snackbar.jsp -->
+
     <jsp:include page="snackbar.jsp" />
 
     <h2>Sign Up</h2>
@@ -24,7 +24,7 @@
         <input type="submit" value="Sign Up">
     </form>
 
-    <!-- Check for 'message' parameter to show snackbar -->
+
     <%
         String message = request.getParameter("message");
         if ("success".equals(message)) {

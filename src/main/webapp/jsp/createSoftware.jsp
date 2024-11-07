@@ -2,7 +2,7 @@
 <%
     String role = (String) session.getAttribute("role");
     if (role == null || !"Admin".equals(role)) {
-        response.sendRedirect("login.jsp");
+        response.sendRedirect(request.getContextPath() + "/jsp/unauthorized.jsp");
         return;
     }
 %>
@@ -15,8 +15,8 @@
     <script src="../js/script.js"></script>
 </head>
 <body>
+    <a href="<%= request.getContextPath() %>/LogoutServlet" class="logout-link">Logout</a>
 
-    <!-- Include Snackbar -->
     <jsp:include page="snackbar.jsp" />
 
     <h2>Create New Software</h2>

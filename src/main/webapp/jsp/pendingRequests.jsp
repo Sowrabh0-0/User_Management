@@ -1,6 +1,13 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.sql.Connection, java.sql.Statement, java.sql.ResultSet, java.sql.SQLException" %>
 <%@ page import="com.example.useraccessmanagement.utils.DatabaseUtils" %>
+<%
+    String role = (String) session.getAttribute("role");
+    if (role == null || (!"Admin".equals(role) && !"Manager".equals(role))) {
+        response.sendRedirect(request.getContextPath() + "/jsp/unauthorized.jsp");
+        return;
+    }
+%>
 <!DOCTYPE html>
 <html>
 <head>
@@ -10,7 +17,8 @@
     <script src="../js/script.js"></script>
 </head>
 <body>
-    <%-- Include the snackbar component --%>
+    <a href="<%= request.getContextPath() %>/LogoutServlet" class="logout-link">Logout</a>
+
     <jsp:include page="snackbar.jsp" />
 
     <h2>Pending Access Requests</h2>
@@ -35,7 +43,7 @@
                          "JOIN users u ON r.user_id = u.id " +
                          "JOIN software s ON r.software_id = s.id " +
                          "WHERE r.status = 'Pending'")) {
-        
+
                     while (rs.next()) {
                         int requestId = rs.getInt("requestId");
                         String employeeName = rs.getString("employeeName");
@@ -60,7 +68,6 @@
                 }
             %>
         </tbody>
-        
     </table>
 
     <%-- Display snackbar message based on status --%>

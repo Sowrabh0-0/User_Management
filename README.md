@@ -17,6 +17,9 @@ This project is containerized using Docker and Docker Compose for easy deploymen
 3. **Software Management** (Admin only): Admins can add new software applications.
 4. **Access Requests** (Employee only): Employees can request access to software.
 5. **Request Approval** (Manager only): Managers can approve or reject access requests.
+6. **Role-Based Access Control**: Different pages and features are accessible only to specific roles. This is implemented using a custom authentication filter.
+7. **Logout Functionality**: Users can log out to end their session.
+8. **Unauthorized Access Page**: Users trying to access restricted pages are redirected to an unauthorized access page.
 
 ## Project Structure
 
@@ -26,12 +29,17 @@ This project is containerized using Docker and Docker Compose for easy deploymen
   - `SoftwareServlet.java`: Allows Admins to add new software applications.
   - `RequestServlet.java`: Handles access request submissions by Employees.
   - `ApprovalServlet.java`: Allows Managers to approve or reject requests.
+  - `LogoutServlet.java`: Logs out users and invalidates their sessions.
+- **Java Filter**:
+  - `AuthFilter.java`: Controls access to pages based on user roles. Public pages include `index.jsp`, `login.jsp`, `signup.jsp`, and `unauthorized.jsp`.
 - **JSP Pages**:
+  - `index.jsp`: Welcome page for the application.
   - `signup.jsp`: User registration form.
   - `login.jsp`: User login form.
   - `createSoftware.jsp`: Form for Admins to add new software.
   - `requestAccess.jsp`: Form for Employees to request access.
   - `pendingRequests.jsp`: Page for Managers to view and act on pending requests.
+  - `unauthorized.jsp`: Redirected page for users trying to access restricted areas.
   - `snackbar.jsp`: Displays feedback messages to users.
 - **Database Tables**:
   - `users`: Stores user data with roles.
@@ -92,23 +100,6 @@ The PostgreSQL database is hosted on a **Google Cloud Platform (GCP) instance**.
          - DB_URL=jdbc:postgresql://<GCP_INSTANCE_IP>:5432/user_access_management
          - DB_USERNAME=your_db_username
          - DB_PASSWORD=your_db_password
-       depends_on:
-         - db
-
-     db:
-       image: postgres:13
-       container_name: user_access_management_db
-       environment:
-         POSTGRES_USER: your_db_username
-         POSTGRES_PASSWORD: your_db_password
-         POSTGRES_DB: user_access_management
-       ports:
-         - "5432:5432"
-       volumes:
-         - db_data:/var/lib/postgresql/data
-
-   volumes:
-     db_data:
    ```
 
    - **Replace `<GCP_INSTANCE_IP>`** with the IP address of your GCP PostgreSQL instance.
@@ -136,6 +127,7 @@ Once the application is deployed and running, you can access the various functio
    - **Employee**: Redirected to `requestAccess.jsp` to request software access.
    - **Manager**: Redirected to `pendingRequests.jsp` to approve/reject requests.
    - **Admin**: Redirected to `createSoftware.jsp` to add new software.
+4. **Logout**: Accessed from a logout link available on protected pages, it clears the session and redirects to `index.jsp`.
 
 ## Development Notes
 
@@ -145,13 +137,14 @@ Feedback messages, such as success or error notifications, are displayed via the
 ### JavaScript Form Validations
 JavaScript functions in `script.js` ensure form fields are filled appropriately. Functions like `validateSignUpForm`, `validateLoginForm`, `submitApproval`, and `validateSoftwareForm` handle front-end validation and feedback.
 
-## Known Issues
+### Authentication and Authorization
+The application uses `AuthFilter` to control access to different pages based on user roles. Only specific roles can access certain pages:
+- **Admin**: Full access.
+- **Manager**: Access to pending requests and approvals.
+- **Employee**: Access to request software access.
 
-1. **Snackbar Display Issues**: Snackbar feedback relies on URL query parameters (e.g., `?status=success`). Ensure that messages are passed correctly.
-2. **ApprovalServlet**: If errors appear during request updates, verify that `requestId` and `action` parameters are set correctly in `pendingRequests.jsp`.
+### Unauthorized Access
+Users attempting to access restricted pages are redirected to `unauthorized.jsp`, which informs them they lack the required permissions.
 
-## Future Enhancements
 
-1. **Role-Based Dashboard**: Enhance the user interface to provide a tailored dashboard for each role.
-2. **Improved Security**: Hash passwords and implement secure session management.
 

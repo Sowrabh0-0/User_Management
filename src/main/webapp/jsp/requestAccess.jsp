@@ -4,7 +4,7 @@
 <%
     String role = (String) session.getAttribute("role");
     if (role == null || (!"Admin".equals(role) && !"Employee".equals(role))) {
-        response.sendRedirect("login.jsp");
+        response.sendRedirect(request.getContextPath() + "/jsp/unauthorized.jsp");
         return;
     }
     String status = request.getParameter("status");
@@ -19,7 +19,9 @@
     <script src="../js/script.js"></script>
 </head>
 <body>
-    <%-- Include the snackbar component --%>
+
+    <a href="<%= request.getContextPath() %>/LogoutServlet" class="logout-link">Logout</a>
+
     <jsp:include page="snackbar.jsp" />
 
     <h2>Request Access to Software</h2>
