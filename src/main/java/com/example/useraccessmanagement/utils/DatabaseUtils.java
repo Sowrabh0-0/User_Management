@@ -36,7 +36,6 @@ public class DatabaseUtils {
     
 
     public static Connection getConnection() throws SQLException {
-        System.out.println("Connecting to database: " + URL);
         return DriverManager.getConnection(URL, USERNAME, PASSWORD);
     }
 

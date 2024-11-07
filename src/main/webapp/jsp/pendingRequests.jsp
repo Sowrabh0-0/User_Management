@@ -1,73 +1,84 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%
-    String role = (String) session.getAttribute("role");
-    if (role == null || !"Manager".equals(role)) {
-        response.sendRedirect("login.jsp");
-        return;
-    }
-%>
+<%@ page import="java.sql.Connection, java.sql.Statement, java.sql.ResultSet, java.sql.SQLException" %>
+<%@ page import="com.example.useraccessmanagement.utils.DatabaseUtils" %>
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Pending Requests</title>
+    <title>Pending Access Requests</title>
+    <link rel="stylesheet" type="text/css" href="../css/style.css">
+    <script src="../js/script.js"></script>
 </head>
 <body>
+    <%-- Include the snackbar component --%>
+    <jsp:include page="snackbar.jsp" />
+
     <h2>Pending Access Requests</h2>
-
-    <table border="1">
-        <tr>
-            <th>User ID</th>
-            <th>Software ID</th>
-            <th>Access Type</th>
-            <th>Reason</th>
-            <th>Action</th>
-        </tr>
-        <%
-            java.sql.Connection conn = null;
-            java.sql.Statement stmt = null;
-            java.sql.ResultSet rs = null;
-            try {
-                conn = com.example.useraccessmanagement.utils.DatabaseUtils.getConnection();
-                String sql = "SELECT id, user_id, software_id, access_type, reason FROM requests WHERE status = 'Pending'";
-                stmt = conn.createStatement();
-                rs = stmt.executeQuery(sql);
-
-                while (rs.next()) {
-                    int requestId = rs.getInt("id");
-                    int userId = rs.getInt("user_id");
-                    int softwareId = rs.getInt("software_id");
-                    String accessType = rs.getString("access_type");
-                    String reason = rs.getString("reason");
-        %>
-                    <tr>
-                        <td><%= userId %></td>
-                        <td><%= softwareId %></td>
-                        <td><%= accessType %></td>
-                        <td><%= reason %></td>
-                        <td>
-                            <form action="/UserAccessManagement/ApprovalServlet" method="post" style="display:inline;">
-                                <input type="hidden" name="requestId" value="<%= requestId %>">
-                                <input type="hidden" name="action" value="approve">
-                                <input type="submit" value="Approve">
-                            </form>
-                            <form action="/UserAccessManagement/ApprovalServlet" method="post" style="display:inline;">
-                                <input type="hidden" name="requestId" value="<%= requestId %>">
-                                <input type="hidden" name="action" value="reject">
-                                <input type="submit" value="Reject">
-                            </form>
-                        </td>
-                    </tr>
-        <%
+    <table class="styled-table">
+        <thead>
+            <tr>
+                <th>Employee Name</th>
+                <th>Software Name</th>
+                <th>Access Type</th>
+                <th>Reason for Request</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <%
+                try (Connection conn = DatabaseUtils.getConnection();
+                     Statement stmt = conn.createStatement();
+                     ResultSet rs = stmt.executeQuery(
+                         "SELECT r.id AS requestId, u.username AS employeeName, s.name AS softwareName, " +
+                         "r.access_type AS accessType, r.reason AS reason " +
+                         "FROM requests r " +
+                         "JOIN users u ON r.user_id = u.id " +
+                         "JOIN software s ON r.software_id = s.id " +
+                         "WHERE r.status = 'Pending'")) {
+        
+                    while (rs.next()) {
+                        int requestId = rs.getInt("requestId");
+                        String employeeName = rs.getString("employeeName");
+                        String softwareName = rs.getString("softwareName");
+                        String accessType = rs.getString("accessType");
+                        String reason = rs.getString("reason");
+            %>
+                        <tr id="row-<%= requestId %>">
+                            <td><%= employeeName %></td>
+                            <td><%= softwareName %></td>
+                            <td><%= accessType %></td>
+                            <td><%= reason %></td>
+                            <td>
+                                <button onclick="submitApproval('<%= requestId %>', 'approve')">Approve</button>
+                                <button onclick="submitApproval('<%= requestId %>', 'reject')">Reject</button>
+                            </td>
+                        </tr>
+            <%
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                if (rs != null) try { rs.close(); } catch (Exception ignore) {}
-                if (stmt != null) try { stmt.close(); } catch (Exception ignore) {}
-                if (conn != null) try { conn.close(); } catch (Exception ignore) {}
-            }
-        %>
+            %>
+        </tbody>
+        
     </table>
+
+    <%-- Display snackbar message based on status --%>
+    <%
+        String status = request.getParameter("status");
+        if ("approved".equals(status)) {
+    %>
+        <script>showSnackbar("Request approved successfully!", "success");</script>
+    <%
+        } else if ("rejected".equals(status)) {
+    %>
+        <script>showSnackbar("Request rejected successfully!", "success");</script>
+    <%
+        } else if ("error".equals(status)) {
+    %>
+        <script>showSnackbar("Failed to process the request. Please try again.", "error");</script>
+    <%
+        }
+    %>
 </body>
 </html>

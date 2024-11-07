@@ -17,37 +17,41 @@ public class ApprovalServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String role = (String) request.getSession().getAttribute("role");
-        if (role == null || !"Manager".equals(role)) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied.");
+        String action = request.getParameter("action");
+        int requestId;
+
+        // Validate and parse requestId
+        try {
+            requestId = Integer.parseInt(request.getParameter("requestId"));
+        } catch (NumberFormatException e) {
+            response.sendRedirect("jsp/pendingRequests.jsp?status=error");
             return;
         }
 
-        int requestId = Integer.parseInt(request.getParameter("requestId"));
-        String action = request.getParameter("action");
-
-        String newStatus = "Pending";
-        if ("approve".equals(action)) {
-            newStatus = "Approved";
-        } else if ("reject".equals(action)) {
-            newStatus = "Rejected";
+        // Validate action parameter
+        if (action == null || (!action.equals("approve") && !action.equals("reject"))) {
+            response.sendRedirect("jsp/pendingRequests.jsp?status=error");
+            return;
         }
 
+        // Process the approval or rejection
         try (Connection conn = DatabaseUtils.getConnection()) {
             String sql = "UPDATE requests SET status = ? WHERE id = ?";
-            PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, newStatus);
-            stmt.setInt(2, requestId);
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, action.equals("approve") ? "Approved" : "Rejected");
+                stmt.setInt(2, requestId);
 
-            int rowsAffected = stmt.executeUpdate();
-            if (rowsAffected > 0) {
-                response.getWriter().write("Request " + action + "d successfully.");
-            } else {
-                response.getWriter().write("Failed to " + action + " the request.");
+                int rowsAffected = stmt.executeUpdate();
+                if (rowsAffected > 0) {
+                    String statusMessage = action.equals("approve") ? "approved" : "rejected";
+                    response.sendRedirect("jsp/pendingRequests.jsp?status=" + statusMessage);
+                } else {
+                    response.sendRedirect("jsp/pendingRequests.jsp?status=error");
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            response.getWriter().write("An error occurred while updating the request status.");
+            response.sendRedirect("jsp/pendingRequests.jsp?status=error");
         }
     }
 }

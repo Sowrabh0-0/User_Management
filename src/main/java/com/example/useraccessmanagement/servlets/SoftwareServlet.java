@@ -25,7 +25,8 @@ public class SoftwareServlet extends HttpServlet {
 
         String name = request.getParameter("name");
         String description = request.getParameter("description");
-        String accessLevels = request.getParameter("access_levels");
+        String[] accessLevelsArray = request.getParameterValues("access_levels");
+        String accessLevels = String.join(", ", accessLevelsArray);
 
         try (Connection conn = DatabaseUtils.getConnection()) {
             String sql = "INSERT INTO software (name, description, access_levels) VALUES (?, ?, ?)";
@@ -36,13 +37,13 @@ public class SoftwareServlet extends HttpServlet {
 
             int rowsAffected = stmt.executeUpdate();
             if (rowsAffected > 0) {
-                response.getWriter().write("Software added successfully.");
+                response.sendRedirect("jsp/createSoftware.jsp?status=success");
             } else {
-                response.getWriter().write("Failed to add software.");
+                response.sendRedirect("jsp/createSoftware.jsp?status=error");
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            response.getWriter().write("An error occurred while adding software.");
+            response.sendRedirect("jsp/createSoftware.jsp?status=error");
         }
     }
 }

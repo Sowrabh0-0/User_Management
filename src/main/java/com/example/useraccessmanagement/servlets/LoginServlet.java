@@ -38,26 +38,28 @@ public class LoginServlet extends HttpServlet {
                 session.setAttribute("username", username);
                 session.setAttribute("role", role);
 
+                String redirectUrl;
                 switch (role) {
                     case "Admin":
-                        response.sendRedirect("jsp/createSoftware.jsp");
+                        redirectUrl = "jsp/createSoftware.jsp?message=success";
                         break;
                     case "Manager":
-                        response.sendRedirect("jsp/pendingRequests.jsp");
+                        redirectUrl = "jsp/pendingRequests.jsp?message=success";
                         break;
                     case "Employee":
-                        response.sendRedirect("jsp/requestAccess.jsp");
+                        redirectUrl = "jsp/requestAccess.jsp?message=success";
                         break;
                     default:
                         response.sendError(HttpServletResponse.SC_FORBIDDEN, "Unknown role");
-                        break;
+                        return;
                 }
+                response.sendRedirect(redirectUrl);
             } else {
-                response.getWriter().write("Invalid username or password.");
+                response.sendRedirect("jsp/login.jsp?message=error");
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            response.getWriter().write("An error occurred during login.");
+            response.sendRedirect("jsp/login.jsp?message=error");
         }
     }
 }

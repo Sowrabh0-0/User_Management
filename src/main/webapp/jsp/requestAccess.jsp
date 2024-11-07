@@ -1,17 +1,56 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page import="java.sql.*, com.example.useraccessmanagement.utils.DatabaseUtils" %>
+
+<%
+    String role = (String) session.getAttribute("role");
+    if (role == null || (!"Admin".equals(role) && !"Employee".equals(role))) {
+        response.sendRedirect("login.jsp");
+        return;
+    }
+    String status = request.getParameter("status");
+%>
+
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <title>Request Access</title>
+    <link rel="stylesheet" type="text/css" href="../css/style.css">
+    <script src="../js/script.js"></script>
 </head>
 <body>
+    <%-- Include the snackbar component --%>
+    <jsp:include page="snackbar.jsp" />
+
     <h2>Request Access to Software</h2>
-    <form action="RequestServlet" method="post">
+    <form action="/UserAccessManagement/RequestServlet" method="post" onsubmit="return validateRequestForm()">
         <label for="software">Software:</label>
         <select id="software" name="softwareId" required>
-            <option value="1">Software A</option>
-            <option value="2">Software B</option>
+            <%
+                try (Connection conn = DatabaseUtils.getConnection();
+                     Statement stmt = conn.createStatement();
+                     ResultSet rs = stmt.executeQuery("SELECT id, name FROM software")) {
+
+                    if (!rs.isBeforeFirst()) { 
+            %>
+                        <option value="">No software available</option>
+            <%
+                    } else {
+                        while (rs.next()) {
+                            int id = rs.getInt("id");
+                            String name = rs.getString("name");
+            %>
+                            <option value="<%= id %>"><%= name %></option>
+            <%
+                        }
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+            %>
+                    <option value="">Error loading software</option>
+            <%
+                }
+            %>
         </select><br><br>
 
         <label for="accessType">Access Type:</label>
@@ -26,5 +65,18 @@
 
         <input type="submit" value="Submit Request">
     </form>
+
+    <%-- Display snackbar message based on status --%>
+    <%
+        if ("success".equals(status)) {
+    %>
+        <script>showSnackbar("Request submitted successfully!", "success");</script>
+    <%
+        } else if ("error".equals(status)) {
+    %>
+        <script>showSnackbar("Failed to submit request. Please try again.", "error");</script>
+    <%
+        }
+    %>
 </body>
 </html>

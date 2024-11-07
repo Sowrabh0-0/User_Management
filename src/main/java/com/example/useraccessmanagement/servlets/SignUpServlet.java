@@ -19,7 +19,7 @@ public class SignUpServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String username = request.getParameter("username");
         String password = request.getParameter("password");
-        String role = request.getParameter("role");  
+        String role = request.getParameter("role");
 
         try (Connection conn = DatabaseUtils.getConnection()) {
             String sql = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
@@ -30,14 +30,13 @@ public class SignUpServlet extends HttpServlet {
 
             int rowsAffected = stmt.executeUpdate();
             if (rowsAffected > 0) {
-                System.out.println("User registered successfully.");
-                response.sendRedirect("jsp/login.jsp");  
+                response.sendRedirect("jsp/signup.jsp?message=success");
             } else {
-                response.getWriter().write("Failed to register user.");
+                response.sendRedirect("jsp/signup.jsp?message=error");
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            response.getWriter().write("An error occurred during registration: " + e.getMessage());
+            response.sendRedirect("jsp/signup.jsp?message=error");
         }
     }
 }

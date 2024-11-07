@@ -41,14 +41,13 @@ public class RequestServlet extends HttpServlet {
 
             int rowsAffected = stmt.executeUpdate();
             if (rowsAffected > 0) {
-                System.out.println("Access request submitted successfully.");
                 response.sendRedirect("jsp/requestAccess.jsp?status=success");
             } else {
-                response.getWriter().write("Failed to submit the access request.");
+                response.sendRedirect("jsp/requestAccess.jsp?status=error");
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            response.getWriter().write("An error occurred while submitting the request.");
+            response.sendRedirect("jsp/requestAccess.jsp?status=error");
         }
     }
 }
