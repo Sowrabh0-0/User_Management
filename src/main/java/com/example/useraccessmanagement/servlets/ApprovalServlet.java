@@ -20,7 +20,6 @@ public class ApprovalServlet extends HttpServlet {
         String action = request.getParameter("action");
         int requestId;
 
-        // Validate and parse requestId
         try {
             requestId = Integer.parseInt(request.getParameter("requestId"));
         } catch (NumberFormatException e) {
@@ -28,13 +27,11 @@ public class ApprovalServlet extends HttpServlet {
             return;
         }
 
-        // Validate action parameter
         if (action == null || (!action.equals("approve") && !action.equals("reject"))) {
             response.sendRedirect("jsp/pendingRequests.jsp?status=error");
             return;
         }
 
-        // Process the approval or rejection
         try (Connection conn = DatabaseUtils.getConnection()) {
             String sql = "UPDATE requests SET status = ? WHERE id = ?";
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
